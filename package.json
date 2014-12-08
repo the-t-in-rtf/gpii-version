@@ -1,0 +1,32 @@
+{
+  "name": "gpii-version",
+  "version": "0.0.1",
+  "description": "A GPII module to add GIT-backed version support for any JSON data with a unique ID.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node tests/all_tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the-t-in-rtf/gpii-version.git"
+  },
+  "author": "Tony Atkins <tony@raisingthefloor.org>",
+  "license": "GPII -- Read LICENSE.txt file for details",
+  "bugs": {
+    "url": "https://github.com/the-t-in-rtf/gpii-version/issues"
+  },
+  "homepage": "https://github.com/the-t-in-rtf/gpii-version",
+  "dependencies": {
+    "git-exec": "^0.2.1",
+    "infusion": "git://github.com/fluid-project/infusion.git#81b0fdde0483b1383d38f27f8e24b963ca6c5d33",
+    "node-sync": "0.0.8",
+    "nodegit": "^0.2.4",
+    "underscore-node": "^0.1.2"
+  },
+  "devDependencies": {
+    "jqUnit": "git://github.com/fluid-project/node-jqUnit.git#e9bf72445bd343a4f3aabe3ba96a1087d3498612"
+  }
+}

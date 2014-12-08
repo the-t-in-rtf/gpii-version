@@ -33,11 +33,11 @@ Store the associated data as a single commit if there are any changes.  Returns 
 		"id": "myUniqueID"
       }
 
-The additional `idField` parameter is provided to allow for record renaming.  If `idField` is supplied and `id` matches the `idField`, nothing additional is done.  If `id` does not match the value stored in `idField`, then the record is moved and updated as part of a single commit.
+The additional `idField` parameter is provided to allow for record renaming.  If `idField` is supplied and `id` matches `idField`, nothing additional is done.  If `id` does not match `idField`, then the record is moved and updated as part of a single commit.
 
 ## `version.list(id)`;
 
-List the version information associated with `id`.  The version code does not know or care what structure you use for `id`, but `id` must be unique for it to be meaningfully used.  Returns JSON data representing the list of versions as an array, in order by date, as in:
+List the version information (commits) associated with `id`.  The version code does not know or care what structure you use for `id`, but `id` must be unique for it to be meaningfully used.  Returns JSON data representing the list of versions as an array, in order by date, as in:
 
      {
 		"ok": true,
@@ -56,11 +56,11 @@ List the version information associated with `id`.  The version code does not kn
 		]
      }
 
-The array will be empty if `id` does not exist.  Requests for `id` that have been renamed will return the results for the new `id`, so you should always check the `id` value of the returned data.
+The array will be empty if `id` does not exist.  Requests for an `id` that has been renamed will return the results for the new `id`, so you should always check the `id` value of the returned data.
 
 ## `version.diff(id, hash1, hash2)`;
 
-List any differences between the supplied versions.  Expects a valid `id` and two valid commit hashes (`hash1`, `hash2`). Returns JSON data representing the changes made.
+List any differences between the supplied versions.  Expects a valid `id` and two valid commit hashes (`hash1`, `hash2`). Returns JSON data representing the changes made, as in:
 
      {
 		"ok": true,

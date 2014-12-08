@@ -3,7 +3,7 @@ gpii-version
 
 A GPII module to add transparent version support for JSON content as it changes.  The module is meant to be backed by a GIT repository, which is uses to prepare the version history and "diffs".
 
-The only requirement in structuring your data for use with this module is that you use a unique identifier for each record.  The unique identifier can be changed, see the documentation for [`versions.store(id, data, [idField]`](#versionstoreid-data-idfield)
+The only requirement in structuring your data for use with this module is that you use a unique identifier for each record.  The unique identifier can be changed, see the documentation for [`versions.store(id, data, [idField])`](#versionstoreid-data-idfield)
 
 
 # Adding versions support to your code
@@ -94,9 +94,9 @@ The version module follows the GPII conventions regarding configuration options.
 
 To remove an existing option, specify it in context and set the value to `null`, as in:
 
-   {
+	{
 	"undesiredDefaultOption": null
-   }
+	}
 
 The meaningful options supported thus far are:
 

@@ -20,11 +20,11 @@ From your code, initialize with your own configuration using code like:
 
 	var version = require("version")(config);
 
-For further details on the configuration object, see ["Configuration"](#configuration) below.  You can use the defaults found in config/defaults.json by passing in an empty hash.  For all other usage, see ["API methods"](#api-methods) below.
+For further details on the configuration object, see ["Configuration"](#configuration) below.  You can use the defaults found in configs/defaults.json by passing in an empty hash.  For all other usage, see ["API methods"](#api-methods) below.
 
 # API methods
 
-## `version.store(id, data, [idField])`;
+## `version.store(id, data, [idField])`
 
 Store the associated data as a single commit if there are any changes.  Returns output like:
 
@@ -35,7 +35,7 @@ Store the associated data as a single commit if there are any changes.  Returns 
 
 The additional `idField` parameter is provided to allow for record renaming.  If `idField` is supplied and `id` matches `idField`, nothing additional is done.  If `id` does not match `idField`, then the record is moved and updated as part of a single commit.
 
-## `version.list(id)`;
+## `version.list(id)`
 
 List the version information (commits) associated with `id`.  The version code does not know or care what structure you use for `id`, but `id` must be unique for it to be meaningfully used.  Returns JSON data representing the list of versions as an array, in order by date, as in:
 
@@ -58,7 +58,7 @@ List the version information (commits) associated with `id`.  The version code d
 
 The array will be empty if `id` does not exist.  Requests for an `id` that has been renamed will return the results for the new `id`, so you should always check the `id` value of the returned data.
 
-## `version.diff(id, hash1, hash2)`;
+## `version.diff(id, hash1, hash2)`
 
 List any differences between the supplied versions.  Expects a valid `id` and two valid commit hashes (`hash1`, `hash2`). Returns JSON data representing the changes made, as in:
 
@@ -86,7 +86,7 @@ If `id` does not exist, `ok` will be set to false. If there are no differences, 
 
 # Configuration
 
-The version module follows the GPII conventions regarding configuration options.  There are default settings found in config/defaults.json, which can be overridden by passing in your own configuration object.  Options will be interleaved with the defaults.  To add a new option, simply specify it in context, as in:
+The version module follows the GPII conventions regarding configuration options.  There are default settings found in configs/defaults.json, which can be overridden by passing in your own configuration object.  Options will be interleaved with the defaults.  To add a new option, simply specify it in context, as in:
 
     {
 	"new": "My own new option that I will use in my code. There are many like it, but this one is mine."

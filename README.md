@@ -37,7 +37,7 @@ The additional `idField` parameter is provided to allow for record renaming.  If
 
 ## `version.list(id)`;
 
-List the version information associated with `id`.  The version code does not know or care what structure you use for IDs, but IDs must be unique for it to be meaningfully used.  Returns JSON data representing the list of versions as an array, in order by date, as in:
+List the version information associated with `id`.  The version code does not know or care what structure you use for `id`, but `id` must be unique for it to be meaningfully used.  Returns JSON data representing the list of versions as an array, in order by date, as in:
 
      {
 		"ok": true,
@@ -56,11 +56,11 @@ List the version information associated with `id`.  The version code does not kn
 		]
      }
 
-The array will be empty if `id` does not exist.  Requests for IDs that have been renamed will return the results for the new ID, so you should always check the id value of the returned data.
+The array will be empty if `id` does not exist.  Requests for `id` that have been renamed will return the results for the new `id`, so you should always check the `id` value of the returned data.
 
 ## `version.diff(id, hash1, hash2)`;
 
-List any differences between the supplied versions.  Expects a valid ID and two valid commit hashes. Returns JSON data representing the changes made.  
+List any differences between the supplied versions.  Expects a valid `id` and two valid commit hashes (`hash1`, `hash2`). Returns JSON data representing the changes made.
 
      {
 		"ok": true,

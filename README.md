@@ -1,7 +1,10 @@
 gpii-version
 ============
 
-A GPII module to add transparent version support backed by a GIT repository.
+A GPII module to add transparent version support for JSON content as it changes.  The module is meant to be backed by a GIT repository, which is uses to prepare the version history and "diffs".
+
+The only requirement in structuring your data for use with this module is that you use a unique identifier for each record.  The unique identifier can be changed, see the documentation for [`versions.store(id, data, [idField]`](https://github.com/the-t-in-rtf/versionstoreid-data-idfield)
+
 
 # Adding versions support to your code
 
@@ -17,11 +20,11 @@ From your code, initialize with your own configuration using code like:
 
 	var version = require("version")(config);
 
-For further details on the configuration object, see ["Configuration"](#configuration) below.  You can use the defaults found in config/defaults.json by passing in an empty hash.  For all other usage, see ["API methods"](#api+methods) below.
+For further details on the configuration object, see ["Configuration"](#configuration) below.  You can use the defaults found in config/defaults.json by passing in an empty hash.  For all other usage, see ["API methods"](#api-methods) below.
 
 # API methods
 
-## version.store(id, data, [idField]);
+## `version.store(id, data, [idField])`;
 
 Store the associated data as a single commit if there are any changes.  Returns output like:
 
@@ -32,7 +35,7 @@ Store the associated data as a single commit if there are any changes.  Returns 
 
 The additional `idField` parameter is provided to allow for record renaming.  If `idField` is supplied and `id` matches the `idField`, nothing additional is done.  If `id` does not match the value stored in `idField`, then the record is moved and updated as part of a single commit.
 
-## version.list(id);
+## `version.list(id)`;
 
 List the version information associated with `id`.  The version code does not know or care what structure you use for IDs, but IDs must be unique for it to be meaningfully used.  Returns JSON data representing the list of versions as an array, in order by date, as in:
 
@@ -55,7 +58,7 @@ List the version information associated with `id`.  The version code does not kn
 
 The array will be empty if `id` does not exist.  Requests for IDs that have been renamed will return the results for the new ID, so you should always check the id value of the returned data.
 
-## version.diff(id, hash1, hash2);
+## `version.diff(id, hash1, hash2)`;
 
 List any differences between the supplied versions.  Expects a valid ID and two valid commit hashes. Returns JSON data representing the changes made.  
 

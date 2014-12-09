@@ -1,0 +1,6 @@
+{
+  "version": {
+    "repoDir": "/tmp/version-repo",
+    "initRepoIfEmpty": true
+  }
+}

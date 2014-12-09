@@ -1,3 +1,11 @@
 {
-  "repoDir": "/tmp/versions-repo"
+  "version": {
+    "repoDir": "/tmp/version-repo",
+    "initRepoIfEmpty": false,
+    "patchDir": "/tmp",
+    "shellOpts": {
+      "cwd": "/tmp/version-repo",
+      "timeout": 10000
+    }
+  }
 }

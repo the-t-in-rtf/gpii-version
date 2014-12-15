@@ -33,7 +33,7 @@ Store the associated data as a single commit if there are any changes.  Returns 
 		"id": "myUniqueID"
       }
 
-The additional `idField` parameter is provided to allow for record renaming.  If `idField` is supplied and `id` matches `idField`, nothing additional is done.  If `id` does not match `idField`, then the record is moved and updated as part of a single commit.
+The additional `idField` parameter is provided to allow for record renaming.  If `idField` is supplied and `id` matches `idField`, nothing additional is done.  If `id` does not match `idField`, then the record is moved and updated as part of a single commit.  **Note:** Changing a record's `id` value will reset its history, and is not recommended.
 
 ## `version.list(id)`
 
@@ -56,11 +56,13 @@ List the version information (commits) associated with `id`.  The version code d
 		]
      }
 
-The array will be empty if `id` does not exist.  Requests for an `id` that has been renamed will return the results for the new `id`, so you should always check the `id` value of the returned data.
+The array will be null if `id` does not exist.  Requests for an `id` that has been renamed will return the results for the new `id`, so you should always check the `id` value of the returned data.
 
 ## `version.diff(id, hash1, hash2)`
 
-List any differences between the supplied versions.  Expects a valid `id` and two valid commit hashes (`hash1`, `hash2`). Returns JSON data representing the changes made, as in:
+List any differences between the supplied versions.  Expects a valid `id` and two valid commit hashes (`hash1`, `hash2`).
+
+Returns `null` if `id` is not valid.  If `id` is valid, returns JSON data representing the changes made, as in:
 
      {
 		"ok": true,
@@ -100,11 +102,29 @@ To remove an existing option, specify it in context and set the value to `null`,
 
 The meaningful options supported thus far are:
 
-TODO:  Fill this out
+| Field | Description |
+| ----- | ----------- |
+| `repoDir` | The directory containing the repository content and associated `.git` directory. |
+| `initRepoIfEmpty` | If `initRepoIfEmpty` is set to `true` and the directory specified in `repoDir` doesn't exist or has not been initialized as a git repo, the initial setup will be taken care of automatically.  If `initRepoIfEmpty` is set to false, an error will be thrown if `repoDir` doesn't exist or hasn't been initialized as a git repo. |
+| `patchDir` | A temporary directory in which older revisions will be assembled from patch data. |
+| `shellOpts` | The arguments (including working directory) to pass to the shell when executing git commands.  See below for an example of the options commonly used. |
 
+Here is sample JSON data as used in our unit tests:
+
+	{
+      "version": {
+        "repoDir": "/tmp/version-test",
+        "initRepoIfEmpty": true,
+        "patchDir": "/tmp",
+        "shellOpts": {
+          "cwd": "/tmp/version-test",
+          "timeout": 10000
+        }
+      }
+    }
 
 # Running the tests:
 
 To run the acceptance tests for this module, use a command like the following:
 
-	node tests/all_tests.js
+	node tests/repository.js

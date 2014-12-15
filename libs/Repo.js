@@ -1,8 +1,9 @@
 var fs   = require("fs");
 var sys  = require('sys')
 var exec = require('child_process').exec;
+var _    = require("underscore");
 
-// I couldn't find a synchronous git wrapper I liked, so I wrote my own.  I am probably a bad person
+// I couldn't find a synchronous git wrapper I liked, so I wrote my own.  I am probably a bad person.
 var Repo = function(config, callback) {
     this.config = config;
 
@@ -50,6 +51,7 @@ Repo.prototype = {
 };
 
 Repo.prototype.store = function (id, data, idField, callback) {
+    var parent = this;
     if (idField && data[idField] && data[idField] !== id) {
         exec("git mv " + id + " " + data[idField],  this.config.version.shellOpts, function (error, stdout, stderr) {
             if (error) {
@@ -57,12 +59,11 @@ Repo.prototype.store = function (id, data, idField, callback) {
                 if (callback) { callback(this); }
             }
             else {
-                this.commitAndPush(callback);
+                Repo.prototype.commitAndPush.call(parent, callback);
             }
         });
     }
     else {
-        var parent = this;
         fs.writeFileSync(parent.config.version.repoDir + "/" + id, JSON.stringify(data));
         exec("git add " + id,  parent.config.version.shellOpts, function (error, stdout, stderr) {
             if (error) {
@@ -88,44 +89,130 @@ Repo.prototype.commitAndPush = function(callback) {
     });
 };
 
+Repo.prototype.idExists = function(id) {
+    return fs.existsSync(this.config.version.repoDir + "/" + id);
+};
+
+// Makes a call to `git rev-list`, which returns changes, newest first.  Returns `null` if the ID does not exist...
 Repo.prototype.listRevs = function (id, callback) {
-    exec("git rev-list --all " + id,  this.config.version.shellOpts, function (error, stdout, stderr) {
-        if (error) {
-            console.error("Error retrieving revisions:" + stdout);
+    var parent = this;
+    if (Repo.prototype.idExists.call(parent, id)) {
+        exec("git rev-list --all " + id,  this.config.version.shellOpts, function (error, stdout, stderr) {
+            var revs = null;
+            if (error) {
+                console.error("Error retrieving revisions:" + stdout ? stdout : stderr);
+            }
+
+            if (stdout.trim() !== "") {
+                revs = stdout.trim().split("\n");
+            }
+
+            if (callback) { callback(revs); }
+        });
+    }
+    else {
+        if (callback) { callback(null);}
+    }
+};
+
+Repo.prototype.deepDiff = function (object1, object2, path, diffs) {
+    // All common fields
+    _.intersection(Object.keys(object1), Object.keys(object2)).forEach(function(key){
+        var fullKey = path ? path + "." + key : key;
+        var value1 = object1[key];
+        var value2 = object2[key];
+        if (!_.isEqual(value1, value2)) {
+            if (value1 instanceof Object && value2 instanceof Object) {
+                Repo.prototype.deepDiff(value1, value2, fullKey, diffs);
+            }
+            else {
+                diffs.changed[fullKey] = {"old": value1, "new": value2};
+            }
         }
+    });
 
-        revs = stdout.trim().split("\n");
+    // Fields only in object 1
+    _.difference(Object.keys(object1), Object.keys(object2)).forEach(function(key){
+        var fullKey = path ? path + "." + key : key;
+        var value1 = object1[key];
+        diffs.removed[fullKey] = { "old": value1 };
+    });
 
-        if (callback) { callback(revs); }
+    // Fields only in object 2
+    _.difference(Object.keys(object2), Object.keys(object1)).forEach(function(key){
+        var fullKey = path ? path + "." + key : key;
+        var value2 = object2[key];
+        diffs.added[fullKey] = { "new": value2 };
     });
 };
 
+// Return a structured breakdown of differences between two revisions of a file.  Returns null if the id does not exist.
 Repo.prototype.diff = function (id, hash1, hash2, callback) {
+    var parent = this;
+    if (Repo.prototype.idExists.call(parent, id)) {
+        var hash1Content = {};
+        var hash2Content = {};
+        parent.getRev(id, hash1, function(content){
+            hash1Content = content;
+            parent.getRev(id, hash2, function(content){
+                hash2Content = content;
+
+                object1 = JSON.parse(hash1Content);
+                object2 = JSON.parse(hash2Content);
+
+                var diffs = {"added": {}, "removed": {}, "changed": {}};
+                Repo.prototype.deepDiff(object1, object2, null, diffs);
+
+                if (callback) { callback(diffs); }
+            })
+        });
+    }
+    else {
+        if (callback) { callback(null); }
+    }
 };
 
+
+// Returns the contents of a stored object at a particular hash revision.  Returns null if the id or hash cannot be found.
 Repo.prototype.getRev = function (id, hash, callback) {
-    var parent = this;
-    var diffCmd = "git diff -p " + hash +  " " + id + " > " + parent.config.version.patchDir + "/" +id + "-" + hash + ".patch"
-    debugger;
-    exec(diffCmd,  parent.config.version.shellOpts, function (error, stdout, stderr) {
-        if (error) {
-            console.error("Error loading diff content:" + stderr + stdout);
-            if (callback) { callback("{}"); }
-        }
-        else {
-            var patchCmd = "patch -R -i " + parent.config.version.patchDir + "/" +id + "-" + hash + ".patch -o " + parent.config.version.patchDir + "/" + id + ".patched " + id;
-            exec(patchCmd,  parent.config.version.shellOpts, function (error, stdout, stderr) {
-                if (error) {
-                    console.error("Error loading revision content:" + stderr);
-                    if (callback) { callback("{}"); }
+    var parent      = this;
+
+    if (Repo.prototype.idExists.call(parent, id)) {
+        var patchFile   = parent.config.version.patchDir + "/" + id + "-" + hash + ".patch";
+        var patchedFile = parent.config.version.patchDir + "/" + id + "-" + hash + ".patched";
+        var diffCmd     = "git diff -p " + hash + " " + id + " > " + patchFile;
+
+        exec(diffCmd,  parent.config.version.shellOpts, function (error, stdout, stderr) {
+            if (error) {
+                console.error("Error loading diff content:" + stderr + stdout);
+                if (callback) { callback(null); }
+            }
+            else {
+                var stats = fs.statSync(patchFile);
+                if (stats.size > 0) {
+                    var patchCmd = "patch -R -i " + patchFile + " -o " + patchedFile + " " + id;
+                    exec(patchCmd,  parent.config.version.shellOpts, function (error, stdout, stderr) {
+                        if (error) {
+                            console.error("Error loading revision content:" + stderr);
+                            if (callback) { callback("{}"); }
+                        }
+                        else {
+                            var content = fs.readFileSync(patchedFile);
+                            if (callback) { callback(content.toString()); }
+                        }
+                    });
                 }
+                // We are working with the same content we have currently.
                 else {
-                    var content = fs.readFileSync(parent.config.version.patchDir + "/" + id + ".patched");
+                    var content = fs.readFileSync(parent.config.version.repoDir + "/" + id);
                     if (callback) { callback(content.toString()); }
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+    else {
+        if (callback) { callback(null); }
+    }
 };
 
 module.exports = Repo;

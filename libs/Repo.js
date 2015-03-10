@@ -1,10 +1,12 @@
+// Add versioning support to any system with unique IDs, backed by a series of GIT repositories.
+"use strict";
+/* global require */
 var fs   = require("fs");
-var sys  = require('sys')
-var exec = require('child_process').exec;
+var exec = require("child_process").exec;
 var _    = require("underscore");
 
 // I couldn't find a synchronous git wrapper I liked, so I wrote my own.  I am probably a bad person.
-var Repo = function(config, callback) {
+var Repo = function (config, callback) {
     this.config = config;
 
     this.dirExists  = fs.existsSync(config.version.repoDir);
@@ -18,14 +20,14 @@ var Repo = function(config, callback) {
 
         if (this.dirExists) {
             var repository = this;
-            exec("git init", config.version.shellOpts, function (error, stdout, stderr) {
+            exec("git init", config.version.shellOpts, function (error) {
                 if (!error) {
                     repository.repoExists = true;
                     if (callback) {
                         callback(repository);
                     }
                 }
-                else { console.error(error);}
+                else { console.error(error); }
             });
         }
         else {
@@ -36,7 +38,7 @@ var Repo = function(config, callback) {
         }
     }
     else if ((!this.dirExists || !this.repoExists)) {
-        console.error("Repo directory '" + config.version.repoDir + "' does not exist and automatic initialization is disabled.")
+        console.error("Repo directory '" + config.version.repoDir + "' does not exist and automatic initialization is disabled.");
         if (callback) {
             callback(this);
         }
@@ -53,7 +55,7 @@ Repo.prototype = {
 Repo.prototype.store = function (id, data, idField, callback) {
     var parent = this;
     if (idField && data[idField] && data[idField] !== id) {
-        exec("git mv " + id + " " + data[idField],  this.config.version.shellOpts, function (error, stdout, stderr) {
+        exec("git mv " + id + " " + data[idField],  this.config.version.shellOpts, function (error) {
             if (error) {
                 console.error("Error renaming file:" + JSON.stringify(error));
                 if (callback) { callback(this); }
@@ -65,7 +67,7 @@ Repo.prototype.store = function (id, data, idField, callback) {
     }
     else {
         fs.writeFileSync(parent.config.version.repoDir + "/" + id, JSON.stringify(data));
-        exec("git add " + id,  parent.config.version.shellOpts, function (error, stdout, stderr) {
+        exec("git add " + id,  parent.config.version.shellOpts, function (error) {
             if (error) {
                 console.error("Error adding file:" + JSON.stringify(error));
                 if (callback) { callback(parent); }
@@ -77,9 +79,9 @@ Repo.prototype.store = function (id, data, idField, callback) {
     }
 };
 
-Repo.prototype.commitAndPush = function(callback) {
+Repo.prototype.commitAndPush = function (callback) {
     var parent = this;
-    exec("git commit -m \"Updated at " + new Date() + "\"",  this.config.version.shellOpts, function (error, stdout, stderr) {
+    exec("git commit -m \"Updated at " + new Date() + "\"",  this.config.version.shellOpts, function (error, stdout) {
         if (error) {
             console.error("Error committing file:" + stdout);
         }
@@ -89,7 +91,7 @@ Repo.prototype.commitAndPush = function(callback) {
     });
 };
 
-Repo.prototype.idExists = function(id) {
+Repo.prototype.idExists = function (id) {
     return fs.existsSync(this.config.version.repoDir + "/" + id);
 };
 
@@ -111,13 +113,13 @@ Repo.prototype.listRevs = function (id, callback) {
         });
     }
     else {
-        if (callback) { callback(null);}
+        if (callback) { callback(null); }
     }
 };
 
 Repo.prototype.deepDiff = function (object1, object2, path, diffs) {
     // All common fields
-    _.intersection(Object.keys(object1), Object.keys(object2)).forEach(function(key){
+    _.intersection(Object.keys(object1), Object.keys(object2)).forEach(function (key) {
         var fullKey = path ? path + "." + key : key;
         var value1 = object1[key];
         var value2 = object2[key];
@@ -132,14 +134,14 @@ Repo.prototype.deepDiff = function (object1, object2, path, diffs) {
     });
 
     // Fields only in object 1
-    _.difference(Object.keys(object1), Object.keys(object2)).forEach(function(key){
+    _.difference(Object.keys(object1), Object.keys(object2)).forEach(function (key) {
         var fullKey = path ? path + "." + key : key;
         var value1 = object1[key];
         diffs.removed[fullKey] = { "old": value1 };
     });
 
     // Fields only in object 2
-    _.difference(Object.keys(object2), Object.keys(object1)).forEach(function(key){
+    _.difference(Object.keys(object2), Object.keys(object1)).forEach(function (key) {
         var fullKey = path ? path + "." + key : key;
         var value2 = object2[key];
         diffs.added[fullKey] = { "new": value2 };
@@ -152,19 +154,19 @@ Repo.prototype.diff = function (id, hash1, hash2, callback) {
     if (Repo.prototype.idExists.call(parent, id)) {
         var hash1Content = {};
         var hash2Content = {};
-        parent.getRev(id, hash1, function(content){
+        parent.getRev(id, hash1, function (content) {
             hash1Content = content;
-            parent.getRev(id, hash2, function(content){
+            parent.getRev(id, hash2, function (content) {
                 hash2Content = content;
 
-                object1 = JSON.parse(hash1Content);
-                object2 = JSON.parse(hash2Content);
+                var object1 = JSON.parse(hash1Content);
+                var object2 = JSON.parse(hash2Content);
 
                 var diffs = {"added": {}, "removed": {}, "changed": {}};
                 Repo.prototype.deepDiff(object1, object2, null, diffs);
 
                 if (callback) { callback(diffs); }
-            })
+            });
         });
     }
     else {
